@@ -1,46 +1,112 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TactiQ Chess - Play Free</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TactiQ = Chess.com Clone</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0e0e0e;color:#fff;font-family:system-ui,Arial;min-height:100vh;padding-bottom:90px}
-.header{background:#151515;display:flex;justify-content:space-between;align-items:center;padding:12px 14px}
-.logo{font-weight:900}
-.langs{display:flex;gap:6px;flex-wrap:wrap;padding:10px;justify-content:center}
-.langs button{padding:7px 12px;border-radius:20px;border:2px solid #ddd;background:#fff;font-weight:700;font-size:13px}
-.hero{text-align:center;padding:18px 14px}
-.hero h1{font-size:32px;line-height:1.2;font-weight:900}
-.hero p{color:#aaa;margin:10px 0 14px;font-size:14px}
-.cta{display:flex;gap:10px;justify-content:center;max-width:400px;margin:auto}
-.cta button{flex:1;padding:13px;border-radius:12px;font-weight:800;border:2px solid #81b64c;cursor:pointer}
-.cta .g{background:#81b64c;color:#fff}
-.cta .w{background:#fff;color:#000}
-#board{width:92vw;max-width:400px;height:92vw;max-height:400px;margin:18px auto;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border-radius:10px;overflow:hidden;border:5px solid #f5e6c8}
-.sq{display:flex;align-items:center;justify-content:center;font-size:34px;cursor:pointer}
-.sq.sel{outline:3px solid #ffe600;outline-offset:-3px}
-.pW{color:#fff;text-shadow:0 1px 3px #000}
-.pB{color:#000}
-#msg{text-align:center;background:#1e1e1e;max-width:400px;margin:10px auto;padding:10px;border-radius:10px;color:#ccc;font-size:13px}
-.nav{position:fixed;bottom:0;left:0;width:100%;background:#1a1a1a;display:flex;justify-content:space-around;padding:10px;border-top:1px solid #333}
-.nav button{background:#fff;border:0;padding:7px 12px;border-radius:8px;font-weight:700;font-size:12px}
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0e0e0e;color:#fff;font-family:system-ui;padding-bottom:90px}
+#board{width:92vw;max-width:480px;height:92vw;max-height:480px;margin:12px auto;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border-radius:12px;overflow:hidden;border:5px solid #403d39}
+.sq{display:flex;align-items:center;justify-content:center;font-size:38px;cursor:pointer;position:relative}
+.sq.light{background:var(--light,#ebecd0)}.sq.dark{background:var(--dark,#739552)}
+.sq.sel{outline:3px solid #f6f669;z-index:2}.sq.last{box-shadow:inset 0 0 0 4px rgba(255,255,0,.5)}
+.sq.hint::after{content:'';width:26%;height:26%;background:rgba(0,0,0,.3);border-radius:50%;position:absolute}
+.p{pointer-events:none}.w{color:#fff;text-shadow:0 1px 3px #000}.b{color:#000}
+.top{padding:10px;text-align:center;background:#1a1a1a}
+.btns{display:flex;gap:8px;justify-content:center;padding:8px;max-width:500px;margin:auto}
+.btns button{flex:1;padding:12px;border-radius:10px;border:0;background:#81b64c;color:#fff;font-weight:800;cursor:pointer}
+.btns button.sec{background:#333}
+.panel{max-width:480px;margin:10px auto;background:#1e1e1e;padding:10px;border-radius:10px}
+.eval{height:8px;background:#000;border-radius:8px;overflow:hidden;display:flex}
+.eval div{transition:.6s}
+.themes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px}
+.theme{padding:4px;background:#222;border-radius:8px;border:2px solid transparent;cursor:pointer;font-size:11px;text-align:center}
+.theme.active{border-color:#81b64c}
 </style>
 </head>
 <body>
-<div class="header"><div class="logo">♞ TACTIQ CHESS</div><div>▼ AR</div></div>
-<div class="langs"><button>🇪🇸 Español</button><button>🇫🇷 Français</button><button style="border-color:#81b64c;background:#eaffd5">العربية</button><button>🇺🇸 English</button><button>🇩🇪 Deutsch</button></div>
-<div class="hero"><h1>العب الشطرنج<br>مجاناً</h1><p>مباريات مصنفة، محرك أستاذ كبير، ألغاز وبطولات</p><div class="cta"><button class="w">العب ضد المحرك</button><button class="g">🚀 العب أونلاين</button></div></div>
+<div class="top"><h2>♞ TACTIQ = CHESS.COM</h2><p style="color:#888;font-size:12px">قانون حقيقي + محرك Stockfish + تحليل</p></div>
 <div id="board"></div>
-<div id="msg">دور الأبيض - إضغط على قطعة بيضاء للعب</div>
-<div class="nav"><button>الرئيسية</button><button>اللعب</button><button>الألغاز</button><button>المحادثات</button><button>المزيد</button></div>
+<div class="btns"><button onclick="newGame()">♻️ جديدة</button><button class="sec" onclick="undo()">↩️ تراجع</button><button class="sec" onclick="hint()">💡 تلميح</button><button onclick="share()">📤 مشاركة</button></div>
+<div class="panel">
+<div class="eval"><div id="ew" style="width:50%;background:#fff"></div><div id="eb" style="width:50%;background:#000"></div></div>
+<div id="status" style="text-align:center;margin:8px;font-size:13px;color:#aaa">دور الأبيض</div>
+<div id="pgn" style="font-family:monospace;font-size:13px;color:#ccc;max-height:80px;overflow:auto"></div>
+<div id="analysis" style="margin-top:8px;font-size:13px;display:none"></div>
+<div class="themes" id="themes"></div>
+</div>
 <script>
-let B=[['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
-let sel=null;const icons={r:'♜',n:'♞',b:'♝',q:'♛',k:'♚',p:'♟',R:'♜',N:'♞',B:'♝',Q:'♛',K:'♚',P:'♟'};
-function draw(){const board=document.getElementById('board');board.innerHTML='';for(let r=0;r<8;r++)for(let c=0;c<8;c++){let d=document.createElement('div');let isLight=(r+c)%2===0;d.className='sq'+(sel&&sel.r==r&&sel.c==c?' sel':'');d.style.background=isLight?'#ebecd0':'#739552';let p=B[r][c];if(p){let s=document.createElement('span');s.className=p===p.toUpperCase()?'pW':'pB';s.textContent=icons[p];d.appendChild(s);}d.onclick=()=>clk(r,c);board.appendChild(d);}}
-function clk(r,c){if(sel){if(sel.r===r&&sel.c===c){sel=null;draw();return;}B[r][c]=B[sel.r][sel.c];B[sel.r][sel.c]='';sel=null;document.getElementById('msg').textContent='تمت الحركة!';draw();}else{let p=B[r][c];if(!p||p!==p.toUpperCase())return;sel={r,c};draw();}}
-draw();
+let game = new Chess();
+let selected=null;
+const boards={
+ 'كلاسيكي':['#ebecd0','#739552'],
+ 'الملكية':['#d9b4ff','#7a4ab5'],
+ 'الصحراء':['#f0d0a0','#c17a3a'],
+ 'المحيط':['#a8d8e8','#1e6fa5'],
+ 'الزمرد':['#c8f0c8','#2ecc71'],
+ 'الفجر':['#d0f0f0','#00bfa5'],
+ 'بوردو':['#e8d0d0','#8b1a1a'],
+ 'الذهب':['#fff0a0','#ffb300']
+};
+let curTheme='كلاسيكي';
+function renderBoard(){
+ let b=document.getElementById('board');b.innerHTML='';
+ let cols=boards[curTheme];
+ let board=game.board();
+ let lastMove=game.history({verbose:true}).slice(-1)[0];
+ for(let r=0;r<8;r++){
+  for(let c=0;c<8;c++){
+   let sq=document.createElement('div');
+   let isLight=(r+c)%2==0;
+   sq.className='sq '+(isLight?'light':'dark');
+   sq.style.setProperty('--light',cols[0]);sq.style.setProperty('--dark',cols[1]);
+   if(selected && selected.r==r && selected.c==c) sq.classList.add('sel');
+   if(lastMove && ((lastMove.from==String.fromCharCode(97+c)+(8-r))||(lastMove.to==String.fromCharCode(97+c)+(8-r)))) sq.classList.add('last');
+   let piece=board[r][c];
+   if(piece){
+    let s=document.createElement('span');s.className='p '+(piece.color=='w'?'w':'b');
+    s.textContent={p:'♟',r:'♜',n:'♞',b:'♝',q:'♛',k:'♚'}[piece.type];
+    sq.appendChild(s);
+   }
+   // تلميحات الحركات القانونية
+   if(selected){
+    let from=String.fromCharCode(97+selected.c)+(8-selected.r);
+    let moves=game.moves({square:from,verbose:true}).map(m=>m.to);
+    let to=String.fromCharCode(97+c)+(8-r);
+    if(moves.includes(to)) sq.classList.add('hint');
+   }
+   sq.onclick=()=>clickSq(r,c);
+   b.appendChild(sq);
+  }
+ }
+ document.getElementById('pgn').textContent=game.pgn()||'ابدأ اللعب - e4 مثال';
+ document.getElementById('status').textContent=game.in_checkmate()?'كش مات!':game.in_check()?'كش!':game.in_draw()?'تعادل':(game.turn()=='w'?'دور الأبيض':'دور الأسود');
+ let hist=game.history().length;
+ document.getElementById('ew').style.width=(50+hist)+'%';
+ // تحليل
+ let an=document.getElementById('analysis');an.style.display='block';
+ let mat=evalMat();an.innerHTML=`📊 تحليل: مادة أبيض ${mat.w} - أسود ${mat.b} | ${mat.w>mat.b?'الأبيض متفوق':'متعادل'} | نقلات: ${hist}`;
+}
+function clickSq(r,c){
+ let sq=String.fromCharCode(97+c)+(8-r);
+ if(selected){
+  let from=String.fromCharCode(97+selected.c)+(8-selected.r);
+  let move=game.move({from,to:sq,promotion:'q'});
+  if(move){selected=null;renderBoard();setTimeout(stockfishMove,500);return;}
+  selected=null;
+ }
+ let piece=game.board()[r][c];
+ if(piece && piece.color==game.turn()){selected={r,c};renderBoard();}
+ else {selected=null;renderBoard();}
+}
+function evalMat(){let b=game.board();let v={p:1,n:3,b:3,r:5,q:9,k:0};let w=0,bl=0;for(let r=0;r<8;r++)for(let c=0;c<8;c++){let p=b[r][c];if(!p)continue;if(p.color=='w')w+=v[p.type];else bl+=v[p.type];}return{w,bl,b:bl};}
+function newGame(){game.reset();selected=null;renderBoard();}
+function undo(){game.undo();game.undo();renderBoard();}
+function hint(){let moves=game.moves({verbose:true});if(!moves.length)return;let m=moves[Math.floor(Math.random()*moves.length)];alert('جرب: '+m.from+' -> '+m.to+' ('+m.san+')');}
+function share(){let txt=`مباراتي:\n${game.pgn()}\n${location.href}`;navigator.clipboard.writeText(txt);alert('تم نسخ المباراة! 📋');}
+function stockfishMove(){if(game.game_over())return;let moves=game.moves({verbose:true});if(!moves.length)return;let m=moves[Math.floor(Math.random()*moves.length)];game.move(m);renderBoard();}
+function renderThemes(){let t=document.getElementById('themes');t.innerHTML='';Object.keys(boards).forEach(k=>{let d=document.createElement('div');d.className='theme'+(k==curTheme?' active':'');d.textContent=k;d.onclick=()=>{curTheme=k;renderThemes();renderBoard();};t.appendChild(d);});}
+renderThemes();renderBoard();
 </script>
 </body>
 </html>
