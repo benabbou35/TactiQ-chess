@@ -1,112 +1,114 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TactiQ = Chess.com Clone</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>TACTIQ - Chess.com Clone</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{background:#0e0e0e;color:#fff;font-family:system-ui;padding-bottom:90px}
-#board{width:92vw;max-width:480px;height:92vw;max-height:480px;margin:12px auto;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border-radius:12px;overflow:hidden;border:5px solid #403d39}
-.sq{display:flex;align-items:center;justify-content:center;font-size:38px;cursor:pointer;position:relative}
-.sq.light{background:var(--light,#ebecd0)}.sq.dark{background:var(--dark,#739552)}
-.sq.sel{outline:3px solid #f6f669;z-index:2}.sq.last{box-shadow:inset 0 0 0 4px rgba(255,255,0,.5)}
-.sq.hint::after{content:'';width:26%;height:26%;background:rgba(0,0,0,.3);border-radius:50%;position:absolute}
-.p{pointer-events:none}.w{color:#fff;text-shadow:0 1px 3px #000}.b{color:#000}
-.top{padding:10px;text-align:center;background:#1a1a1a}
-.btns{display:flex;gap:8px;justify-content:center;padding:8px;max-width:500px;margin:auto}
-.btns button{flex:1;padding:12px;border-radius:10px;border:0;background:#81b64c;color:#fff;font-weight:800;cursor:pointer}
-.btns button.sec{background:#333}
-.panel{max-width:480px;margin:10px auto;background:#1e1e1e;padding:10px;border-radius:10px}
-.eval{height:8px;background:#000;border-radius:8px;overflow:hidden;display:flex}
-.eval div{transition:.6s}
-.themes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px}
-.theme{padding:4px;background:#222;border-radius:8px;border:2px solid transparent;cursor:pointer;font-size:11px;text-align:center}
-.theme.active{border-color:#81b64c}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b1220;color:#fff;font-family:system-ui;min-height:100vh;padding-bottom:85px;overflow-x:hidden}
+.top{text-align:center;padding:12px}
+.top h2{font-size:18px;letter-spacing:1px}
+.top span{display:inline-block;margin-top:6px;background:#1e293b;padding:7px 16px;border-radius:20px;font-size:13px;border:1px solid #334155}
+/* رقعة مربعة 100% ممعوجاش */
+#wrap{width:92vw;max-width:420px;margin:10px auto;aspect-ratio:1/1}
+#board{width:100%;height:100%;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border-radius:14px;overflow:hidden;border:3px solid #1e293b;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.sq{display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;position:relative;user-select:none}
+.sq.light{background:#b8c5d6}.sq.dark{background:#3d4f6a}
+.sq.sel{background:#facc15!important}.sq.last{background:#fde68a!important}.sq.check{background:#ef4444!important}
+.sq.hint::after{content:'';width:30%;height:30%;background:rgba(0,0,0,.35);border-radius:50%;position:absolute}
+.sq.hint.cap::after{width:90%;height:90%;background:transparent;border:4px solid rgba(0,0,0,.4)}
+.p{pointer-events:none;font-weight:900;-webkit-text-stroke:1.1px;font-size:30px;line-height:1}
+.p.w{color:#eef2ff;-webkit-text-stroke-color:#0f172a;text-shadow:0 1px 1px #000}
+.p.b{color:#0f172a;-webkit-text-stroke-color:#cbd5e1}
+.controls{max-width:420px;margin:12px auto;padding:0 12px;display:flex;flex-direction:column;gap:8px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.row3 button{padding:11px;border-radius:12px;border:1px solid #334155;background:#1e293b;color:#d1d5db;font-size:13px;cursor:pointer}
+.row3 button.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.big{padding:14px;border-radius:12px;border:0;font-weight:800;font-size:15px;cursor:pointer;width:100%}
+.blue{background:#2563eb;color:#fff}.green{background:#16a34a;color:#fff}.darkbtn{background:#1e293b;color:#fff;border:1px solid #334155}
+.eval{height:6px;background:#1e293b;border-radius:6px;overflow:hidden;display:flex;margin:6px 0}
+#ew{background:#fff;transition:.5s}#eb{background:#000;transition:.5s}
+#info{text-align:center;font-size:12px;color:#94a3b8;min-height:36px}
+#pgn{font-family:monospace;font-size:11px;color:#64748b;max-height:60px;overflow:auto;text-align:center}
+.nav{position:fixed;bottom:0;left:0;width:100%;background:#0f172a;display:flex;justify-content:space-around;padding:8px 0;border-top:1px solid #1e293b;z-index:10}
+.nav button{background:0;border:0;color:#64748b;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+.nav button.active{color:#facc15}
 </style>
 </head>
 <body>
-<div class="top"><h2>♞ TACTIQ = CHESS.COM</h2><p style="color:#888;font-size:12px">قانون حقيقي + محرك Stockfish + تحليل</p></div>
-<div id="board"></div>
-<div class="btns"><button onclick="newGame()">♻️ جديدة</button><button class="sec" onclick="undo()">↩️ تراجع</button><button class="sec" onclick="hint()">💡 تلميح</button><button onclick="share()">📤 مشاركة</button></div>
-<div class="panel">
-<div class="eval"><div id="ew" style="width:50%;background:#fff"></div><div id="eb" style="width:50%;background:#000"></div></div>
-<div id="status" style="text-align:center;margin:8px;font-size:13px;color:#aaa">دور الأبيض</div>
-<div id="pgn" style="font-family:monospace;font-size:13px;color:#ccc;max-height:80px;overflow:auto"></div>
-<div id="analysis" style="margin-top:8px;font-size:13px;display:none"></div>
-<div class="themes" id="themes"></div>
+<div class="top"><h2>♞ TACTIQ</h2><span id="turn">● دور الأبيض</span></div>
+<div id="wrap"><div id="board"></div></div>
+<div class="controls">
+<div class="eval"><div id="ew" style="width:50%"></div><div id="eb" style="width:50%"></div></div>
+<div id="info">ابدأ - قوانين الشطرنج الحقيقية خدامة: كش، كش مات، تبييت، أكل بالتجاوز، ترقية</div>
+<div id="pgn"></div>
+<div class="row3"><button id="bw" class="active" onclick="setSide('w')">● أبيض</button><button id="bb" onclick="setSide('b')">● أسود</button><button onclick="alert('أونلاين قريبا')">👥 لاعبان</button></div>
+<button class="big blue" onclick="newGame()">◂ بدء لعبة جديدة</button>
+<button class="big green" onclick="share()">🌐 مشاركة المباراة</button>
+<div style="display:flex;gap:8px"><button class="big darkbtn" style="flex:1" onclick="undo()">↩️ تراجع</button><button class="big darkbtn" style="flex:1" onclick="hint()">💡 تلميح Stockfish</button></div>
 </div>
+<div class="nav"><button><span>👤</span>حسابي</button><button><span>📊</span>إحصائيات</button><button><span>🏆</span>تصنيف</button><button class="active"><span>🏠</span>لعب</button></div>
 <script>
-let game = new Chess();
-let selected=null;
-const boards={
- 'كلاسيكي':['#ebecd0','#739552'],
- 'الملكية':['#d9b4ff','#7a4ab5'],
- 'الصحراء':['#f0d0a0','#c17a3a'],
- 'المحيط':['#a8d8e8','#1e6fa5'],
- 'الزمرد':['#c8f0c8','#2ecc71'],
- 'الفجر':['#d0f0f0','#00bfa5'],
- 'بوردو':['#e8d0d0','#8b1a1a'],
- 'الذهب':['#fff0a0','#ffb300']
-};
-let curTheme='كلاسيكي';
-function renderBoard(){
+let game=new Chess(),sel=null,player='w',engine=null,engineReady=false;
+const pieceUni={p:'♟',r:'♜',n:'♞',b:'♝',q:'♛',k:'♚'};
+function draw(){
  let b=document.getElementById('board');b.innerHTML='';
- let cols=boards[curTheme];
- let board=game.board();
- let lastMove=game.history({verbose:true}).slice(-1)[0];
- for(let r=0;r<8;r++){
-  for(let c=0;c<8;c++){
-   let sq=document.createElement('div');
-   let isLight=(r+c)%2==0;
-   sq.className='sq '+(isLight?'light':'dark');
-   sq.style.setProperty('--light',cols[0]);sq.style.setProperty('--dark',cols[1]);
-   if(selected && selected.r==r && selected.c==c) sq.classList.add('sel');
-   if(lastMove && ((lastMove.from==String.fromCharCode(97+c)+(8-r))||(lastMove.to==String.fromCharCode(97+c)+(8-r)))) sq.classList.add('last');
-   let piece=board[r][c];
-   if(piece){
-    let s=document.createElement('span');s.className='p '+(piece.color=='w'?'w':'b');
-    s.textContent={p:'♟',r:'♜',n:'♞',b:'♝',q:'♛',k:'♚'}[piece.type];
-    sq.appendChild(s);
-   }
-   // تلميحات الحركات القانونية
-   if(selected){
-    let from=String.fromCharCode(97+selected.c)+(8-selected.r);
-    let moves=game.moves({square:from,verbose:true}).map(m=>m.to);
-    let to=String.fromCharCode(97+c)+(8-r);
-    if(moves.includes(to)) sq.classList.add('hint');
-   }
-   sq.onclick=()=>clickSq(r,c);
-   b.appendChild(sq);
-  }
+ let bd=game.board();let hist=game.history({verbose:true});let last=hist.slice(-1)[0];
+ let inCheck=game.in_check(),kingPos=null;
+ if(inCheck){for(let r=0;r<8;r++)for(let c=0;c<8;c++){let p=bd[r][c];if(p&&p.type=='k'&&p.color==game.turn())kingPos=String.fromCharCode(97+c)+(8-r);}}
+ for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+  let d=document.createElement('div');let light=(r+c)%2==0;d.className='sq '+(light?'light':'dark');
+  let sqName=String.fromCharCode(97+c)+(8-r);
+  if(sel&&sel.r==r&&sel.c==c)d.classList.add('sel');
+  if(last&&(last.from==sqName||last.to==sqName))d.classList.add('last');
+  if(kingPos&&kingPos==sqName)d.classList.add('check');
+  if(sel){let from=String.fromCharCode(97+sel.c)+(8-sel.r);let moves=game.moves({square:from,verbose:true});let f=moves.find(m=>m.to==sqName);if(f){d.classList.add('hint');if(f.captured)d.classList.add('cap');}}
+  let p=bd[r][c];if(p){let s=document.createElement('span');s.className='p '+(p.color=='w'?'w':'b');s.textContent=pieceUni[p.type];d.appendChild(s);}
+  d.onclick=()=>click(r,c);b.appendChild(d);
  }
- document.getElementById('pgn').textContent=game.pgn()||'ابدأ اللعب - e4 مثال';
- document.getElementById('status').textContent=game.in_checkmate()?'كش مات!':game.in_check()?'كش!':game.in_draw()?'تعادل':(game.turn()=='w'?'دور الأبيض':'دور الأسود');
- let hist=game.history().length;
- document.getElementById('ew').style.width=(50+hist)+'%';
- // تحليل
- let an=document.getElementById('analysis');an.style.display='block';
- let mat=evalMat();an.innerHTML=`📊 تحليل: مادة أبيض ${mat.w} - أسود ${mat.b} | ${mat.w>mat.b?'الأبيض متفوق':'متعادل'} | نقلات: ${hist}`;
+ document.getElementById('pgn').textContent=game.pgn()||'1. e4 e5 ...';
+ let st=game.in_checkmate()?'♔ كش مات!':game.in_stalemate()?'تعادل - خنق':game.in_draw()?'تعادل':game.in_check()?(game.turn()=='w'?'كش على الأبيض!':'كش على الأسود!'):(game.turn()=='w'?'● دور الأبيض':'● دور الأسود');
+ document.getElementById('turn').textContent=st;
+ let w=0,bl=0,v={p:1,n:3,b:3,r:5,q:9,k:0};for(let r=0;r<8;r++)for(let c=0;c<8;c++){let p=bd[r][c];if(p){if(p.color=='w')w+=v[p.type];else bl+=v[p.type];}}
+ let perc=50+(w-bl)*3;perc=Math.max(5,Math.min(95,perc));document.getElementById('ew').style.width=perc+'%';document.getElementById('eb').style.width=(100-perc)+'%';
+ document.getElementById('info').textContent=game.game_over()?st+` | مادة: أبيض ${w} - أسود ${bl}`:`مادة: أبيض ${w} - أسود ${bl} | نقلات: ${hist.length} | ${game.in_check()?'كش!':''}`;
 }
-function clickSq(r,c){
+function click(r,c){
  let sq=String.fromCharCode(97+c)+(8-r);
- if(selected){
-  let from=String.fromCharCode(97+selected.c)+(8-selected.r);
-  let move=game.move({from,to:sq,promotion:'q'});
-  if(move){selected=null;renderBoard();setTimeout(stockfishMove,500);return;}
-  selected=null;
+ if(sel){
+  let from=String.fromCharCode(97+sel.c)+(8-sel.r);
+  // ترقية: إلا وصل البيدق للآخر
+  let promo= (game.board()[sel.r][sel.c]?.type=='p' && (r==0||r==7)) ? prompt('ترقية ل: q=وزير r=قلعة b=فيل n=حصان','q')||'q' : 'q';
+  let mv=game.move({from,to:sq,promotion:promo});
+  if(mv){sel=null;draw();if(!game.game_over()&&game.turn()!=player)setTimeout(stockfishMove,400);return;}
+  sel=null;
  }
- let piece=game.board()[r][c];
- if(piece && piece.color==game.turn()){selected={r,c};renderBoard();}
- else {selected=null;renderBoard();}
+ let p=game.board()[r][c];if(p&&p.color==game.turn()){sel={r,c};draw();}else{sel=null;draw();}
 }
-function evalMat(){let b=game.board();let v={p:1,n:3,b:3,r:5,q:9,k:0};let w=0,bl=0;for(let r=0;r<8;r++)for(let c=0;c<8;c++){let p=b[r][c];if(!p)continue;if(p.color=='w')w+=v[p.type];else bl+=v[p.type];}return{w,bl,b:bl};}
-function newGame(){game.reset();selected=null;renderBoard();}
-function undo(){game.undo();game.undo();renderBoard();}
-function hint(){let moves=game.moves({verbose:true});if(!moves.length)return;let m=moves[Math.floor(Math.random()*moves.length)];alert('جرب: '+m.from+' -> '+m.to+' ('+m.san+')');}
-function share(){let txt=`مباراتي:\n${game.pgn()}\n${location.href}`;navigator.clipboard.writeText(txt);alert('تم نسخ المباراة! 📋');}
-function stockfishMove(){if(game.game_over())return;let moves=game.moves({verbose:true});if(!moves.length)return;let m=moves[Math.floor(Math.random()*moves.length)];game.move(m);renderBoard();}
-function renderThemes(){let t=document.getElementById('themes');t.innerHTML='';Object.keys(boards).forEach(k=>{let d=document.createElement('div');d.className='theme'+(k==curTheme?' active':'');d.textContent=k;d.onclick=()=>{curTheme=k;renderThemes();renderBoard();};t.appendChild(d);});}
-renderThemes();renderBoard();
+function initEngine(){
+ if(engine)return;engine=new Worker('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
+ engine.onmessage=e=>{
+  let line=e.data;if(typeof line!=='string')return;
+  if(line.includes('bestmove')){
+   let best=line.split(' ')[1];if(best&&best!='(none)'&&best.length>=4){game.move({from:best.slice(0,2),to:best.slice(2,4),promotion:best[4]||'q'});draw();}
+  }
+  if(line.includes('score cp')){let m=line.match(/score cp (-?\d+)/);if(m){let cp=parseInt(m[1])/100;document.getElementById('info').textContent=`Stockfish C++: ${cp>0?'+':''}${cp.toFixed(2)} | ${cp>1?'الأبيض متفوق':cp<-1?'الأسود متفوق':'متعادل'}`;}}
+ };
+ engine.postMessage('uci');engineReady=true;
+}
+function stockfishMove(){
+ if(game.game_over())return;initEngine();
+ document.getElementById('turn').textContent='● Stockfish C++ كيفكر...';
+ engine.postMessage('position fen '+game.fen());engine.postMessage('go depth 16');
+}
+function newGame(){game.reset();sel=null;draw();}
+function undo(){game.undo();game.undo();draw();}
+function hint(){stockfishMove();}
+function share(){let txt=`♞ مباراتي TactiQ:\n${game.pgn()}\nالعب معي: ${location.href}`;navigator.clipboard.writeText(txt).then(()=>alert('تم نسخ المباراة! 📋'));}
+function setSide(s){player=s;document.getElementById('bw').classList.toggle('active',s=='w');document.getElementById('bb').classList.toggle('active',s=='b');newGame();}
+draw();
 </script>
 </body>
 </html>
