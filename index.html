@@ -90,4 +90,28 @@ function initEngine(){
   if(line.indexOf('bestmove')>-1){
    var best=line.split(' ')[1];
    if(best&&best!='(none)'&&best.length>=4){
-    game.move({from:best.slice(0,2),to:best.slice(2,4),promotion:best
+    game.move({from:best.slice(0,2),to:best.slice(2,4),promotion:best[4]||'q'});
+    drawBoard();
+   }
+  }
+  if(line.indexOf('score cp')>-1){var m=line.match(/score cp (-?\d+)/);if(m){var cp=parseInt(m[1])/100;document.getElementById('info').innerHTML='📊 Stockfish: '+(cp>0?'+':'')+cp.toFixed(2)+' '+(cp>1?'الأبيض رابح':cp<-1?'الأسود رابح':'متعادل');}}
+ };
+ engine.postMessage('uci');
+}
+
+function stockfishMove(){
+ if(game.game_over())return;
+ initEngine();
+ document.getElementById('turn').textContent='● Stockfish كيفكر (قوي)...';
+ engine.postMessage('position fen '+game.fen());
+ engine.postMessage('go depth 18');
+}
+function setSide(s){player=s;document.getElementById('bw').classList.toggle('active',s=='w');document.getElementById('bb').classList.toggle('active',s=='b');newGame();if(s=='b')setTimeout(stockfishMove,600);}
+function newGame(){game.reset();sel=null;drawBoard();document.getElementById('info').textContent='لعبة جديدة - Stockfish جاهز';}
+function undoMove(){game.undo();game.undo();drawBoard();}
+function hintMove(){stockfishMove();}
+function shareGame(){var txt=game.pgn();navigator.clipboard.writeText(txt).then(function(){alert('تم نسخ PGN 📋')});}
+drawBoard();
+</script>
+</body>
+</html>
